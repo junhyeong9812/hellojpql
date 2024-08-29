@@ -2,6 +2,6 @@
 <br>
 JPQL 관련 코드
 <br>
-위 내용은
+다른 내용은
 <br>
 https://github.com/junhyeong9812/ex1-hello-jpa
