@@ -10,9 +10,26 @@ public class Member {
     private int age;
 
     //Team과 연관관계 생성
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "TEAM_ID")
     private Team team;
+    //패치타입을 레이지로 안두면 team도 같이 조인한다.
+
+    @Enumerated(EnumType.STRING)
+    private MemberType type;
+
+    public MemberType getType() {
+        return type;
+    }
+
+    public void setType(MemberType type) {
+        this.type = type;
+    }
+
+    public void changeTeam(Team team){
+        this.team=team;
+        team.getMembers().add(this);
+    }
 
 
     public Long getId() {
@@ -37,6 +54,14 @@ public class Member {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    public Team getTeam() {
+        return team;
+    }
+
+    public void setTeam(Team team) {
+        this.team = team;
     }
 
     @Override

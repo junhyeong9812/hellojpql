@@ -2,7 +2,9 @@ package hellojpql;
 
 import jakarta.persistence.*;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 public class App {
   public static void main(String[] args) {
@@ -165,24 +167,258 @@ public class App {
 
 
       //페이징API
-      for (int i=0;i<100;i++){
-        Member member = new Member();
-        member.setUsername("member"+i);
-        member.setAge(i);
-        em.persist(member);
-      }
+//      for (int i=0;i<100;i++){
+//        Member member = new Member();
+//        member.setUsername("member"+i);
+//        member.setAge(i);
+//        em.persist(member);
+//      }
 
-      em.flush();
-      em.clear();
-      List<Member> resultList = em.createQuery("select m from Member m order by m.age desc", Member.class)
-              .setFirstResult(0)
-              .setMaxResults(10)
-              .getResultList();
+//      em.flush();
+//      em.clear();
+//      List<Member> resultList = em.createQuery("select m from Member m order by m.age desc", Member.class)
+//              .setFirstResult(0)
+//              .setMaxResults(10)
+//              .getResultList();
       //페이징할 때는 order by정렬이 필수>>소팅이 되면서 순서대로 가져와야되기 때문
-      System.out.println("res = " + resultList);
+//      System.out.println("res = " + resultList);
       //desc로 했으니 역순으로 나오는데
       //이때 나오는 limit ? offset ?이라는 쿼리가 나오는데
       //지금 DB방언이 H2 db라서 위처럼 리밋트 오프셋이 나가는것
+
+      //조인
+//      Team team= new Team();
+//      team.setName("TeamA");
+//      em.persist(team);
+//
+//      Member member = new Member();
+//        member.setUsername("member1");
+//        member.setAge(10);
+//        member.setTeam(team);
+//        member.setType(MemberType.ADMIN);
+//        //원래는 양방향 연관관계로 세팅해야 된다.
+//        em.persist(member);
+
+//        String joinQuery="select m from Member m inner join m.team t";
+//        //inner는 생략 가능
+//      List<Member> resultList = em.createQuery(joinQuery, Member.class)
+//              .getResultList();
+//      //이너조인으로 나가는 것을 볼 수 있다.
+//      System.out.println("resultList = " + resultList);
+
+//      //left outer join
+//      String joinQuery="select m from Member m left outer join m.team t";
+//      //outer는 생략 가능
+//      List<Member> resultList = em.createQuery(joinQuery, Member.class)
+//              .getResultList();
+//      //이너조인으로 나가는 것을 볼 수 있다.
+//      System.out.println("resultList = " + resultList);
+
+//      //Setter조인
+//      String joinQuery="select m from Member m,Team t where m.username=t.name";
+//      //outer는 생략 가능
+//      List<Member> resultList = em.createQuery(joinQuery, Member.class)
+//              .getResultList();
+//      //이너조인으로 나가는 것을 볼 수 있다.
+//      System.out.println("resultList = " + resultList);
+
+//      //조인대상 필터링
+//      String joinQuery="select m from Member m left join Team t on t.name='teamA'";
+//      //outer는 생략 가능
+//      List<Member> resultList = em.createQuery(joinQuery, Member.class)
+//              .getResultList();
+//      //이너조인으로 나가는 것을 볼 수 있다.
+//      System.out.println("resultList = " + resultList);
+
+//      //연관관계 없는 엔티티 외부 조인
+//      String joinQuery="select m from Member m left join Team t on m.username=t.name";
+//      //outer는 생략 가능
+//      List<Member> resultList = em.createQuery(joinQuery, Member.class)
+//              .getResultList();
+//      System.out.println("resultList = " + resultList);
+
+      //서브쿼리
+      //where절 서브쿼리
+//      String joinQuery="select m from Member m " +
+//              "where m.age >= (select avg(m2.age) from Member m2)";
+      //팀A에 속한 회원 검색(exists)
+//      String joinQuery="select m from Member m " +
+//              "where exists (select t from m.team t where t.name = 'TeamA')";
+//      //Any쿼리
+//      String joinQuery="select m from Member m " +
+//              "where m.team = ANY (select t from Team t)";
+//      //All쿼리
+//      String joinQuery="select m from Member m " +
+//              "where m.team = ALL (select t from Team t)";
+//
+//      List<Member> resultList = em.createQuery(joinQuery, Member.class)
+//              .getResultList();
+//      System.out.println("resultList = " + resultList);
+
+      //스트링 타입
+
+//      String Query="select m.username,'HELLO',TRUE from Member m " +
+//              "where m.type= hellojpql.MemberType.ADMIN";
+      //이렇게 이넘타입은 직접 패키지를 전부 기입해줘야 한다.
+//      String Query="select m.username,'HELLO',TRUE from Member m " +
+//              "where m.type= :userType";
+//      List<Object[]> resultList = em.createQuery(Query)
+//              .setParameter("userType",MemberType.ADMIN)
+//              .getResultList();
+//      for (Object[] row : resultList) {
+//        System.out.println("row[0] = " + row[0]);
+//        System.out.println("row[1] = " + row[1]);
+//        System.out.println("row[2] = " + row[2]);
+//      }
+//      System.out.println("resultList = " + resultList);
+      
+      //기본 CASE식
+//      String query =
+//              "select " +
+//                      "case when m.age <= 10 then '학생요금' " +
+//                      "     when m.age >= 60 then '경로요금' " +
+//                      "     else '일반요금' end " +
+//              "from Member m ";
+//      List<String> result = em.createQuery(query, String.class).getResultList();
+//      for(String s : result){
+//        System.out.println("s = " + s);
+//      }
+
+//      //조건 CASE식
+//      String query =
+//              "select " +
+//                      "case t.name " +
+//                      "when 'TeamA' then '인센티브110%' " +
+//                      "when 'TeamB' then '인센티브120%' " +
+//                      "else '인센티브105%' " +
+//                      "end " +
+//                      "from Team t ";
+//      List<String> result = em.createQuery(query, String.class).getResultList();
+//      for(String s : result){
+//        System.out.println("s = " + s);
+//      }
+//      //s = 인센티브110%
+
+//      //COALESCE : 하나씩 조회
+//      String query =
+//              "select coalesce(m.username, '이름 없는 회원') from Member m";
+//      //이름 없는 회원이 나오면 이름없는 회원 아니면 이름이 나온다.
+//      List<String> result = em.createQuery(query, String.class).getResultList();
+//      for(String s : result){
+//        System.out.println("s = " + s);
+//      }
+//
+      //nullIF :두 값이 같으면 null 아니면 처음 값
+//      String query =
+//              "select nullif(m.username, 'member1') from Member m";
+//      //이름 없는 회원이 나오면 이름없는 회원 아니면 이름이 나온다.
+//      List<String> result = em.createQuery(query, String.class).getResultList();
+//      for(String s : result){
+//        System.out.println("s = " + s);
+//      }
+      //s = null
+      //이름이 같아서 null이 나오는데 이건 보통 관리자의 이름을 숨길 때 사용하게 된다.
+      //이 함수들은 표줌함수라 어떤 함수든 적용 가능
+
+
+//      - CONCAT : 문자열 연결
+//      String query =
+//              "select concat('a','b') from Member m";
+//              "select 'a'||'b' from Member m";
+      //||로도 사용 가능 (저건 하이버네이트 구현체가 지원하는 기능)
+
+//      - SUBSTRING : 문자열의 일부분을 추출
+//      String query =
+//              "select substring(m.username,2,3) from Member m";
+////      - TRIM : 문자열의 앞 뒤 공백을 제거
+//      String query =
+//              "select trim(m.username) from Member m";
+////      - LOWER, : LOWER는 소문자로 변환
+//      String query =
+//              "select lower(m.username) from Member m";
+////      -UPPER : UPPER는 대문자로 변환
+//      String query =
+//              "select upper(m.username) from Member m";
+////      - LENGTH : 문자열의 길이를 반환
+//      String query =
+//              "select length(m.username) from Member m";
+////      - LOCATE : 특정 문자열이 다른 문자열 내에서 처음 나타나는 위치를 반환
+//      String query =
+//              "select locate('de','abcdefg') from Member m";
+////      - ABS: ABS는 숫자의 절대값 반환/
+//      String query =
+//              "select abs(5) from Member m";
+////      - SQRT: SQRT는 숫자의 제곱근을 반환 /
+//      String query =
+//              "select sqrt(10) from Member m";
+////      -MOD: MOD는 두 숫자 간의 나머지를 반환
+//      String query =
+//              "select mod(20,10) from Member m";
+////      - SIZE: SIZE 컬렉션의 크기(항목 수)를 반환
+//      String query =
+//              "select size(t.members) from Team t";
+////      - INDEX(JPA 용도) : `INDEX` 함수는 `@OrderColumn`이 지정된 리스트에서 요소의 인덱스를 반환
+//      String query =
+//              "select index('a','b') from Member m";
+    //@OrderColumn을 사용할 때 리스트 타입의 값타입 컬렉션에서 사용하는데
+    //그 컬렉션의 위치값을 구할 때 쓰는데 굳이 안쓰고 엔티티로 사용하는 게 좋다.
+
+//      List<Integer> result = em.createQuery(query, Integer.class).getResultList();
+////      List<String> result = em.createQuery(query, String.class).getResultList();
+////      for(String s : result){
+////        System.out.println("s = " + s);
+////      }
+//      for(Integer s : result){
+//        System.out.println("s = " + s);
+//      }
+
+//      //사용자 정의 함수
+//      String query =
+//      "select function('group_concat', i.name) from Item i";
+//      List<String> result = em.createQuery(query, String.class).getResultList();
+//      for(String s : result){
+//        System.out.println("s = " + s);
+//      }
+
+      //경로 표현식
+      Team team= new Team();
+      team.setName("TeamA");
+      em.persist(team);
+
+      Member member = new Member();
+      member.setUsername("member1");
+      member.setAge(10);
+      member.setTeam(team);
+      member.setType(MemberType.ADMIN);
+      //원래는 양방향 연관관계로 세팅해야 된다.
+      em.persist(member);
+      
+      //상태 필드
+//      String query = "select m.username from member m";
+      //m.username같이 상태 필드를 만나게 되면 경로 탐색은 끝난다.
+      
+      //단일 값 연관 경로
+//      String query = "select m.team.name from member m";
+      //이때 .team을 하게 되면 team으로 묵시적 내부 조인이 발생하여 team을 탐색한다.
+      //그리고 그 team에서 name까지 탐색할 수 있고 name을 만나면 상태 필드이기 때문에 그대로 탐색을
+      //멈춘다.
+
+      //컬렉션 값 연관 경로
+//      String query = "select t.members from Team t";
+      //이렇게 쿼리하면 컬렉션은 1대다 형식이라 매핑이 불가능해서 더이상 탐색이 불가능하다.
+      //핵심은 여기서 탐색 자체가 불가능
+
+      //FROM 절에서 명시적 조인을 통해 별칭을 얻으면 별칭을 통
+      //해 탐색 가능
+      String query = "select m.username from Team t join t.members m";
+      //from절에서 명시적 조인을 해서 별칭을 얻는다는게 이런 듯
+
+      Collection result =em.createQuery(query,Collection.class).getResultList();
+      for(Object o : result){
+        System.out.println("o = " + o);
+      }
+
+
 
       transaction.commit();
     }catch (Exception e){
