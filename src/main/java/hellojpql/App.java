@@ -559,6 +559,75 @@ public class App {
 
 //      System.out.println("result.size() = " +
 //              result.size());
+      
+      //엔티티 직접 사용
+//      String query = "select m from Member m where m=:member ";
+//
+//      Member result = em.createQuery(query,Member.class)
+//              .setParameter("member",member1)
+//              .getSingleResult();
+
+      //외래키
+//      String query = "select m from Member m where m.team=:team ";
+//
+//      List<Member> resultList = em.createQuery(query, Member.class)
+//              .setParameter("team", teamA)
+//              .getResultList();
+//      for(Member result: resultList) {
+//        System.out.println("result = " + result);
+//      }
+      //2명이라고
+      //이렇게 직접 맴버 엔티티 자체를 넣을 수 있따.
+//      select
+//      m1_0.id,
+//              m1_0.age,
+//              m1_0.TEAM_ID,
+//              m1_0.type,
+//              m1_0.username
+//      from
+//      Member m1_0
+//      where
+//      m1_0.id=?
+//      결과적으로 식별자를 꺼내서 그 식별자로 조회한다는 것을 알 수 있다.
+
+//      //NamedQuery
+////      List<Member> resultList = em.createNamedQuery("Member.findByUsername", Member.class)
+////              .setParameter("username", "회원1")
+////              .getResultList();
+////      for(Member member:resultList){
+////        System.out.println("member = " + member);
+////      }
+
+      //벌크 연산
+      //모든 회원의 나이를 20로 변경하기 위한 쿼리
+//      int resultCount = em.createQuery("update Member m set m.age=20").executeUpdate();
+//      System.out.println("resultCount = " + resultCount);
+//      Hibernate:
+//    /* update
+//        Member m
+//    set
+//        m.age=20 */ update Member
+//      set
+//              age=20
+//      resultCount = 3
+
+      //이 쿼리도 JPQL이기 떄문에 자동으로 flush가 된다.
+      int resultCount = em.createQuery("update Member m set m.age=20")
+              .executeUpdate();
+      Member findMember =em.find(Member.class,member1.getId());
+      //이렇게 다시가져와서 출력을 해보면(결국 이때도 영속성 컨텍스트에서 찾는 것이기 때문
+      System.out.println("findMember = " + findMember.getAge());
+      //이렇게 다시 가져와도
+      //영속성 컨텍스트에 20살로 다 반영이 안된다.
+      //그래서 여기서 위에서 em.clear를하고 다시 찾아야 된다.
+
+//
+//      System.out.println("resultCount = " + resultCount);
+//      //DB에 강제로 업데이트를 한 경우  20이 영속성 내부에는 반영이 안되어 있어서
+//      System.out.println("member1 = " + member1.getAge());
+      //20살로 반영이 안되어 있다.
+      //그래서 데이터 정확성이 안맞기 때문에 이때
+      em.clear();//를 통해 데이터를 초기화 후
 
 
 
