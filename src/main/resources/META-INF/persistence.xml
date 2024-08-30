@@ -82,6 +82,7 @@
                  DDL생성 기능은 DDL을 자동 생성할 때만 사용되고 JPA실행 로직에는 영향을
                  주지 않는다.
                 -->
+            <property name="hibarnate.default_batch_fetch_size" value="100"/>
         </properties>
     </persistence-unit>
 

@@ -381,17 +381,17 @@ public class App {
 //      }
 
       //경로 표현식
-      Team team= new Team();
-      team.setName("TeamA");
-      em.persist(team);
-
-      Member member = new Member();
-      member.setUsername("member1");
-      member.setAge(10);
-      member.setTeam(team);
-      member.setType(MemberType.ADMIN);
-      //원래는 양방향 연관관계로 세팅해야 된다.
-      em.persist(member);
+//      Team team= new Team();
+//      team.setName("TeamA");
+//      em.persist(team);
+//
+//      Member member = new Member();
+//      member.setUsername("member1");
+//      member.setAge(10);
+//      member.setTeam(team);
+//      member.setType(MemberType.ADMIN);
+//      //원래는 양방향 연관관계로 세팅해야 된다.
+//      em.persist(member);
       
       //상태 필드
 //      String query = "select m.username from member m";
@@ -410,13 +410,155 @@ public class App {
 
       //FROM 절에서 명시적 조인을 통해 별칭을 얻으면 별칭을 통
       //해 탐색 가능
-      String query = "select m.username from Team t join t.members m";
-      //from절에서 명시적 조인을 해서 별칭을 얻는다는게 이런 듯
+//      String query = "select m.username from Team t join t.members m";
+//      //from절에서 명시적 조인을 해서 별칭을 얻는다는게 이런 듯
+//
+//      Collection result =em.createQuery(query,Collection.class).getResultList();
+//      for(Object o : result){
+//        System.out.println("o = " + o);
+//      }
 
-      Collection result =em.createQuery(query,Collection.class).getResultList();
-      for(Object o : result){
-        System.out.println("o = " + o);
-      }
+      //fetch조인
+      Team teamA= new Team();
+      teamA.setName("TeamA");
+      em.persist(teamA);
+
+      Team teamB= new Team();
+      teamB.setName("TeamB");
+      em.persist(teamB);
+
+      Member member1 = new Member();
+      member1.setUsername("회원1");
+      member1.setTeam(teamA);
+      em.persist(member1);
+
+      Member member2 = new Member();
+      member2.setUsername("회원2");
+      member2.setTeam(teamA);
+      em.persist(member2);
+
+      Member member3 = new Member();
+      member3.setUsername("회원3");
+      member3.setTeam(teamB);
+      em.persist(member3);
+
+      em.flush();
+      em.clear();
+//      String query = "select m From Member m";
+      //이렇게 Team의 이름을 같이 출력한다면 팀은 프록시로 가져왔다가 getTeam을 할때
+      //db에 쿼리를 날리게 되는데 처음루프에서는 팀을 가져오고 두번째는 이미 팀이 있으니
+      //그대로 출력하고 세번째 팀 B는 영속성 컨텍스트에 없기때문에 조회하는 것
+      //회원1,팀 A(SQL)
+      //회원2, 팀A(1차 캐시)
+      //회원3, 팀 B(SQL)
+      //이렇게 되면 회원 100명정도 조회하면 쿼리가 거의 100개이상 나간다.
+      //그래서 1+N문제가 발생해서 무수히 많은 쿼리가 나간다.
+      //이걸 해결하기 위해서는 패치조인을 이용해서 풀어야 된다.
+//      String query = "select m From Member m join fetch m.team";
+      //맴버를 조인하는데 패치를 통해 데이터를 한번에 다 가져오는 것
+      //그럼 이 루프에서 team은 프록시가 아니다.
+      //이미 맴버랑 팀 둘다 가져오기 때문에 프록시가 아니라 실제 엔티티가 담기게 된다.
+      //프록시가 아니라 진짜 데이터이기 때문에 ,hellojpql.Team@4e5c8ef3
+      //에초에 프록시로 조회되는 게 아니다.
+
+//      List<Member> result = em.createQuery(query,Member.class).getResultList();
+//      for(Member member :result){
+////        System.out.println("member = " + member);
+//        //맴버만 가져오면 member만 호출하지만
+//        System.out.println("member.getUsername(),member.getTeam() = "
+//                + member.getUsername()+","+member.getTeam());
+//
+//
+//      }
+
+      //컬렉션 패치 조인
+//      String query = "select t From Team t join fetch t.members";
+      //패치되서 이제는 member에 대한 중복으로 값을 가져오지 않는다.
+//      String query = "select distinct t From Team t join fetch t.members";
+      //원래 distinct를 사용해서 중복 결과를 제거해야 됬는 데 이젠 아니다.
+      //애플리케이션 레벨에서 엔티티 중복도 제거한다.
+
+      //일반 조인
+//      String query = "select t " +
+//              "from Team t join t.members m ";
+      //이렇게 일반 조인을 사용하면 select절에서 팀만 가져온다.
+      //그냥 조인이기 때문에 조인문만 SQL에서 하는 거지 t에 대해서만 가져온다.
+      //이제 데이터 뻥튀기는 안된다.
+      //데이터가 로딩시점에 로딩이 안된 것
+
+      //페치 조인의 한계
+//      String query = "select t " +
+//              "from Team t join t.members as m where m.username = '회원1'";
+      //로직적으로 members의 별칭 m해서 where m.username
+      //같은 방식이 불가능하다. 중간에 몇개를 거르고 가져오고 싶다고 바로 안된다.
+      //따로 조회해야 된다.
+      //팀과 연관된 맴버가 1명일 경우 잘못조작하면 4명이 누락될 수 있다.
+      //그래서 별칭을 주지 않는게 관례이다.
+      //이제 별칭으로 where절을 줄 수 있다.
+      //select에서 팀이 아닌 맴버를 5개 조회하는 쿼리를 날려야 된다.
+      //회원1이 존재하는 팀 자체를 가져온다.
+//      String query = "select t " +
+//              "from Team t join t.members as m join fetch m.team";
+      //이렇게 여러개 패치할 때 사용할 순 있다.
+
+      //회원1이 존재하는 팀 자체를 가져온다.
+//      String query = "select t " +
+//              "from Team t join t.members as m join fetch m.team";
+
+      //페이징을 한다면
+//      String query = "select t " +
+//              "from Team t join fetch t.members as m";
+      //이걸 해결 하기 위해서는 다대일 관계로 페이징처리를 하면 된다.
+//      String query = "select m " +
+//              "from Member m join fetch m.team as t";
+//      List<Member> result = em.createQuery(query,Member.class)
+//              .setFirstResult(0)
+//              .setMaxResults(2)
+//              .getResultList();
+//      for(Member member : result){
+//        System.out.println("member = " + member.getUsername());
+//      }
+      //아니면
+      //      String query = "select t from Team t ";
+//          이렇게 하고 페이징을 한다 team자체만 페이징하는 것
+      //이렇게 하면 두개만 나오는데 이때 팀에서 루프를 탈때 레이지로 불러올텐데
+      //처음 조회되는 게 처음 셀렉트에 팀이 2개이기 떄문에
+      //팀 A가 돌면 그와 연관된 맴버 2배를 레이지 로딩하고
+      //팀 B가 돌면 연관된 맴버 하나를 레이지 로딩할 것이다.
+      //n+1문제가 있긴 하지만 페이징 가능하긴 하다.
+      //이때 team에서 Members에 BatchSize()라는 어노테이션이 존재하는데
+      //이걸 사용하면 지금 팀을 조회했는데 셀렉트로 맴버를 가져올 때 ??로
+      //팀 아이디가 2개가 들어가서 조회하는 것인데
+      //한번에 팀 A와 팀B와 연관된 내용을 가져온다.
+      //이 배치사이즈라는 옵션이 팀을 가져올 때 맴버는 레이지 로딩인데
+      //레이지로딩을 가져올 때 만약 size가 100이라면 result에 담긴 팀 최대 100개의 데이터를
+      //한번에 인쿼리로 넘겨서 가져오는 것
+      //이걸 이용하면 n+1문제를 해결 할 수 있다.10번 나갈게 1번만 나가서 2번만 쿼리가
+      //나가도록 하는 것
+      //아니면 이 배치사이즈를 글로벌 세팅으로 가져가는데
+
+
+
+
+//      List<Team> result = em.createQuery(query,Team.class)
+//              .setFirstResult(0)
+//              .setMaxResults(2)
+//              .getResultList();
+      //쿼리를 보면 DB에서 팀에 대한 모든 데이터를 다 가져온 것
+      //데이터가 무수히 많이 들어오기 떄문에 에러가 날 수 밖에 없다.
+
+//      List<Team> result = em.createQuery(query,Team.class).getResultList();
+      
+//      for(Team team :result){
+//        System.out.println
+//                ("team=" + team.getName()+"| members"+team.getMembers().size());
+//        for(Member member: team.getMembers()){
+//          System.out.println("member = " + member.getUsername());
+//        }
+//      }
+
+//      System.out.println("result.size() = " +
+//              result.size());
 
 
 
