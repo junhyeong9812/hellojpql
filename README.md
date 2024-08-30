@@ -5,3 +5,5 @@ JPQL 관련 코드
 다른 내용은
 <br>
 https://github.com/junhyeong9812/ex1-hello-jpa
+<br>
+8월30일 완강
